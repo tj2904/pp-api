@@ -13,8 +13,7 @@ import nltk
 from bs4 import BeautifulSoup
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk.sentiment.vader
-nltk.download('vader_lexicon', download_dir='/tmp')
-nltk.data.path.append('/tmp')
+
 import urllib.request
 from urllib.parse import urlparse
 
