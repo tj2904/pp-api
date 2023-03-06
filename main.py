@@ -71,7 +71,7 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/api/v1/vader/live/england", response_model=NewsResponse, tags=["Vader"])
+@app.get("/api/v1/vader/live/england", tags=["Vader"])
 def vader_scores_appended_to_BBC_England_news_feed():
 
     bbc_feed_new = feedparser.parse(
