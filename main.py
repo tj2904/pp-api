@@ -20,9 +20,9 @@ from urllib.parse import urlparse
 
 class Vader(BaseModel):
     neg: float
-``    neu: float
-``    pos: float
-``    compound: float
+    neu: float
+    pos: float
+    compound: float
 
 
 class NewsResponse(BaseModel):
@@ -38,11 +38,14 @@ class NewsResponse(BaseModel):
 class Url(BaseModel):
     url: str
 
+
 class UrlResponse(BaseModel):
     image: str
 
+
 class HealthCheck(BaseModel):
     healthcheck: str
+
 
 tags_metadata = [
     {
