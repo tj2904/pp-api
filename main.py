@@ -6,7 +6,7 @@
 
 from typing import List, Union
 from fastapi import FastAPI, status, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 import feedparser
 import pandas as pd
 import nltk
@@ -32,13 +32,11 @@ class NewsResponse(BaseModel):
     vaderSummary: Vader
     id: str
     imageUrl: str = None
-    published: List[int] = []
+    published: List[int]
 
-    class Config:
-        orm_mode = True
 
 class Url(BaseModel):
-    url: str
+    url: HttpUrl
 
 
 class UrlResponse(BaseModel):
