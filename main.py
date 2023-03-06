@@ -32,7 +32,7 @@ class NewsResponse(BaseModel):
     vaderSummary: Vader
     id: str
     imageUrl: str = None
-    published: List[int]
+    published: List[int] = None
 
 
 class Url(BaseModel):
@@ -40,7 +40,7 @@ class Url(BaseModel):
 
 
 class UrlResponse(BaseModel):
-    image: str
+    image: HttpUrl
 
 
 class HealthCheck(BaseModel):
