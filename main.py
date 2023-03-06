@@ -19,17 +19,17 @@ from urllib.parse import urlparse
 
 
 class Vader(BaseModel):
-    neg: float = None
-    neu: float = None
-    pos: float = None
-    compound: float = None
+    neg: float
+``    neu: float
+``    pos: float
+``    compound: float
 
 
 class NewsResponse(BaseModel):
     title: str
     summary: str
-    vaderTitle: Union[Vader, None]
-    vaderSummary: Union[Vader, None]
+    vaderTitle: Vader
+    vaderSummary: Vader
     id: str
     imageUrl: str = None
     published: List[int] = []
