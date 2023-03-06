@@ -34,6 +34,8 @@ class NewsResponse(BaseModel):
     imageUrl: str = None
     published: List[int] = []
 
+    class Config:
+        orm_mode = True
 
 class Url(BaseModel):
     url: str
