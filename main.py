@@ -31,7 +31,7 @@ class NewsResponse(BaseModel):
     vaderTitle: Vader
     vaderSummary: Vader
     id: str
-    imageUrl: str = None
+    imageUrl: HttpUrl = None
     published: List[int] = None
 
 
