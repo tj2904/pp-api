@@ -4,7 +4,7 @@
 # to run the server, run the following command in the terminal
 # uvicorn main:app --reload
 
-from typing import Union
+from typing import List, Union
 from fastapi import FastAPI, status, Request
 from pydantic import BaseModel
 import feedparser
@@ -18,9 +18,31 @@ import urllib.request
 from urllib.parse import urlparse
 
 
+class Vader(BaseModel):
+    neg: float = None
+    neu: float = None
+    pos: float = None
+    compound: float = None
+
+
+class NewsResponse(BaseModel):
+    title: str
+    summary: str
+    vaderTitle: Union[Vader, None]
+    vaderSummary: Union[Vader, None]
+    id: str
+    imageUrl: str = None
+    published: List[int] = []
+
 
 class Url(BaseModel):
     url: str
+
+class UrlResponse(BaseModel):
+    image: str
+
+class HealthCheck(BaseModel):
+    healthcheck: str
 
 tags_metadata = [
     {
@@ -33,18 +55,20 @@ tags_metadata = [
 ]
 
 app = FastAPI(title="PositivePress",
-          description="Supporting APIs", openapi_tags=tags_metadata, version="0.1.0")
+              description="Supporting APIs", openapi_tags=tags_metadata, version="0.1.0")
 
-@app.get('/api/healthcheck', status_code=status.HTTP_200_OK)
+
+@app.get('/api/healthcheck', response_model=HealthCheck, status_code=status.HTTP_200_OK)
 def perform_healthcheck():
     return {'healthcheck': 'Everything OK!'}
+
 
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/api/v1/vader/live/england", tags=["Vader"])
+@app.get("/api/v1/vader/live/england", response_model=NewsResponse, tags=["Vader"])
 def vader_scores_appended_to_BBC_England_news_feed():
 
     bbc_feed_new = feedparser.parse(
@@ -80,8 +104,7 @@ def vader_scores_appended_to_BBC_England_news_feed():
     return df.to_dict(orient="records")
 
 
-
-@app.get("/api/v1/vader/live/tech", tags=["Vader"])
+@app.get("/api/v1/vader/live/tech",  response_model=NewsResponse, tags=["Vader"])
 def vader_scores_appended_to_BBC_tech_news_feed():
 
     bbc_feed_new = feedparser.parse(
@@ -118,7 +141,7 @@ def vader_scores_appended_to_BBC_tech_news_feed():
 
 
 # scrape OpenGraph tags to provide an image for a given news url
-@app.post("/api/v1/og/", tags=["Utilities"])
+@app.post("/api/v1/og/", response_model=UrlResponse, tags=["Utilities"])
 def get_open_graph_image(url):
     response = urllib.request.urlopen(url)
     soup = BeautifulSoup(response, 'html.parser',
