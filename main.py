@@ -107,7 +107,7 @@ def vader_scores_appended_to_BBC_England_news_feed():
     return df.to_dict(orient="records")
 
 
-@app.get("/api/v1/vader/live/tech",  response_model=NewsResponse, tags=["Vader"])
+@app.get("/api/v1/vader/live/tech", tags=["Vader"])
 def vader_scores_appended_to_BBC_tech_news_feed():
 
     bbc_feed_new = feedparser.parse(
@@ -141,6 +141,43 @@ def vader_scores_appended_to_BBC_tech_news_feed():
         df = df.append(row, ignore_index=True)
 
     return df.to_dict(orient="records")
+
+
+@app.get("/api/v1/vader/live/{category}", tags=["Vader"])
+def vader_scores_appended_to_given_BBC_news_feed():
+
+    bbc_feed_new = feedparser.parse(
+        "http://feeds.bbci.co.uk/news/{category}/rss.xml")
+    items = bbc_feed_new.entries
+
+    df = pd.DataFrame(columns=['title', 'summary',
+                      'vaderTitle', 'vaderSummary'])
+
+    for item in items:
+        title = item.title
+        summary = item.summary
+
+        sid = SentimentIntensityAnalyzer()
+        ss_title = sid.polarity_scores(title)
+        ss_sumamry = sid.polarity_scores(summary)
+        vader_title = ss_title
+        vader_summary = ss_sumamry
+
+        id = item.id
+        published_parsed = item.published_parsed
+
+        response = urllib.request.urlopen(id)
+        soup = BeautifulSoup(response, 'html.parser',
+                             from_encoding=response.info().get_param('charset'))
+        image_url = soup.find("meta", property="og:image")["content"]
+        image = image_url
+
+        row = {'title': title, 'summary': summary, 'vaderTitle': vader_title,
+               'vaderSummary': vader_summary, 'id': id, 'imageUrl': image, 'published': published_parsed}
+        df = df.append(row, ignore_index=True)
+
+    return df.to_dict(orient="records")
+
 
 
 # scrape OpenGraph tags to provide an image for a given news url
