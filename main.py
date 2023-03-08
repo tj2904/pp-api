@@ -143,11 +143,12 @@ def vader_scores_appended_to_BBC_tech_news_feed():
     return df.to_dict(orient="records")
 
 
-@app.post("/api/v1/vader/live/{category}", tags=["Vader"])
+@app.get("/api/v1/vader/live/{category}", tags=["Vader"])
 def vader_scores_appended_to_given_BBC_news_feed(category: str):
 
+    category = category.lower()
     bbc_feed_new = feedparser.parse(
-        'http://feeds.bbci.co.uk/news/{category}/rss.xml')
+        'http://feeds.bbci.co.uk/news/'+category+'/rss.xml')
     items = bbc_feed_new.entries
 
     df = pd.DataFrame(columns=['title', 'summary',
