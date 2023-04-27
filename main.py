@@ -6,6 +6,7 @@
 
 from typing import List, Union
 from fastapi import FastAPI, status, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl
 import feedparser
 import pandas as pd
@@ -13,6 +14,8 @@ import nltk
 from bs4 import BeautifulSoup
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk.sentiment.vader
+from deta import Deta
+from deta import App
 
 import urllib.request
 from urllib.parse import urlparse
@@ -52,6 +55,10 @@ tags_metadata = [
         "name": "default"
     },
     {
+        "name": "Vader",
+        "description": "Interaction with the VADER Sentiment Analysis Algorithm."
+    },
+    {
         "name": "Utilities",
         "description": "Utility endpoints for the API."
     },
@@ -59,7 +66,8 @@ tags_metadata = [
 
 app = FastAPI(title="PositivePress",
               description="Supporting APIs", openapi_tags=tags_metadata, version="0.1.0")
-
+deta = Deta("8ea22b4b-3714-4d7b-8452-a066f5c6ef9a")
+dbBasicVader = deta.Base('basicVaderScoredNews')
 
 @app.get('/api/healthcheck', response_model=HealthCheck, status_code=status.HTTP_200_OK)
 def perform_healthcheck():
@@ -179,7 +187,13 @@ def vader_scores_appended_to_given_BBC_news_feed(category: str):
 
     return df.to_dict(orient="records")
 
-
+# get the highest scoring news story by summary compound
+# {"vaderSummary.compound?gt": 0.75}
+@app.get("/api/v1/vader/summary/pos/top", tags=["Vader"])
+async def get_most_positive_vader_scored_news_from_database():
+    result = dbBasicVader.fetch({"vaderSummary.compound?gt": 0.75})
+    
+    return {"data": result} if result else ({"message": "No news found"})
 
 # scrape OpenGraph tags to provide an image for a given news url
 @app.post("/api/v1/og/", response_model=UrlResponse, tags=["Utilities"])
