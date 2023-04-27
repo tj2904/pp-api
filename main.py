@@ -15,7 +15,6 @@ from bs4 import BeautifulSoup
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk.sentiment.vader
 from deta import Deta
-from deta import App
 
 import urllib.request
 from urllib.parse import urlparse
@@ -66,8 +65,9 @@ tags_metadata = [
 
 app = FastAPI(title="PositivePress",
               description="Supporting APIs", openapi_tags=tags_metadata, version="0.1.0")
-deta = Deta("8ea22b4b-3714-4d7b-8452-a066f5c6ef9a")
-dbBasicVader = deta.Base('basicVaderScoredNews')
+
+deta = Deta("a0tvjq0b_LQmpeSWdumAfCgkHuYqyNMJzxykAfdFv")
+dbBasicVader = deta.Base("basicVaderScoredNews")
 
 @app.get('/api/healthcheck', response_model=HealthCheck, status_code=status.HTTP_200_OK)
 def perform_healthcheck():
