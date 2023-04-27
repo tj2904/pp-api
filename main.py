@@ -15,10 +15,12 @@ from bs4 import BeautifulSoup
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk.sentiment.vader
 from deta import Deta
+import os
 
 import urllib.request
 from urllib.parse import urlparse
 
+detaBaseApiKey = os.getenv("Deta-Base")
 
 class Vader(BaseModel):
     neg: float
@@ -66,7 +68,7 @@ tags_metadata = [
 app = FastAPI(title="PositivePress",
               description="Supporting APIs", openapi_tags=tags_metadata, version="0.1.0")
 
-deta = Deta("a0tvjq0b_LQmpeSWdumAfCgkHuYqyNMJzxykAfdFv")
+deta = Deta(detaBaseApiKey)
 dbBasicVader = deta.Base("basicVaderScoredNews")
 
 @app.get('/api/healthcheck', response_model=HealthCheck, status_code=status.HTTP_200_OK)
