@@ -4,6 +4,7 @@
 # to run the server, run the following command in the terminal
 # uvicorn main:app --reload
 
+import sentry_sdk
 import os
 from typing import List, Union
 from fastapi import FastAPI, status, Request
@@ -20,6 +21,15 @@ import urllib.request
 from urllib.parse import urlparse
 
 detaBaseApiKey = os.getenv("Deta-Base")
+
+sentry_sdk.init(
+    dsn="https://5a0e51d4d9df41cf963941e56b6f71d6@o4505121660665856.ingest.sentry.io/4505127392837632",
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0
+)
 
 class Vader(BaseModel):
     neg: float
