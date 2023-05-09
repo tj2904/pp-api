@@ -1,3 +1,4 @@
+import sentry_sdk
 import os
 import urllib.request
 from urllib.parse import urlparse
@@ -6,13 +7,18 @@ import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk.sentiment.vader
 from deta import Deta
-from fastapi import FastAPI, status, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 import feedparser
-import pandas as pd
 nltk.download('vader_lexicon', download_dir='/tmp')
 nltk.data.path.append('/tmp')
+
+sentry_sdk.init(
+    dsn="https://5a0e51d4d9df41cf963941e56b6f71d6@o4505121660665856.ingest.sentry.io/4505127392837632",
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0
+)
 
 detaBaseApiKey = os.getenv("Deta-Base")
 
@@ -36,7 +42,7 @@ def cron_task():
         image_url = soup.find("meta", property="og:image")["content"]
         image = image_url
 
-        db.insert({
+        dbBasicVader.insert({
             "title": title,
             "summary": summary,
             "id": id,
