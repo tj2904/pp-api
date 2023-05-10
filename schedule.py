@@ -51,3 +51,6 @@ def cron_task():
             "region": "england",
             "imageUrl": image,
         })
+
+if __name__ == '__main__':
+    cron_task()
