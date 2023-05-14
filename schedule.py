@@ -38,18 +38,26 @@ def cron_task():
 
         response = urllib.request.urlopen(id)
         soup = BeautifulSoup(response, 'html.parser',
-                         from_encoding=response.info().get_param('charset'))
+                             from_encoding=response.info().get_param('charset'))
         image_url = soup.find("meta", property="og:image")["content"]
         image = image_url
+
+        sid = SentimentIntensityAnalyzer()
+        ss_title = sid.polarity_scores(title)
+        ss_summary = sid.polarity_scores(summary)
+        vader_title = ss_title
+        vader_summary = ss_summary
 
         dbBasicVader.insert({
             "title": title,
             "summary": summary,
             "id": id,
+            "imageUrl": image,
             "published": published_parsed,
             "source": "bbc",
             "region": "england",
-            "imageUrl": image,
+            "vaderTitle": vader_title,
+            "vaderSummary": vader_summary
         })
 
 if __name__ == '__main__':
