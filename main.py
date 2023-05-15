@@ -213,7 +213,8 @@ async def get_most_positive_vader_scored_news_from_database():
     result = dbBasicVader.fetch({"vaderSummary.compound?gt": 0.75})
     return {"data": result} if result else ({"message": "No news found"})
 
-@app.post("/api/v1/og/", response_model=UrlResponse, tags=["Utilities"])
+
+@app.post("/api/v1/og/", response_model=UrlResponse, tags=["Utilities"], response_model=UrlResponse)
 def get_open_graph_image(url):
     """Uses OpenGraph tags to provide an image url for a given news url"""
     response = urllib.request.urlopen(url)
