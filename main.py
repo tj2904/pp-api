@@ -75,7 +75,7 @@ tags_metadata = [
     },
 ]
 app = FastAPI(title="PositivePress",
-              description="Supporting APIs", openapi_tags=tags_metadata, version="0.1.0")
+              description="API service to support Positive Press, a service that sorts news to find the postive.", openapi_tags=tags_metadata, version="1.0.0")
 
 deta = Deta(detaBaseApiKey)
 dbBasicVader = deta.Base("basicVaderScoredNews")
@@ -261,45 +261,6 @@ def vader_bbc_england_news_to_database():
         })
 
     return {"message": "successful"}
-
-
-# @app.get("/api/v1/vader/store/world", tags=["Vader"])
-# def vader_bbc_world_news_to_database():
-#     bbc_feed_new = feedparser.parse(
-#         "http://feeds.bbci.co.uk/news/world/rss.xml")
-#     items = bbc_feed_new.entries
-
-#     for item in items:
-#         title = item.title
-#         summary = item.summary
-#         id = item.id
-#         published_parsed = item.published
-
-#         response = urllib.request.urlopen(id)
-#         soup = BeautifulSoup(response, 'html.parser',
-#                              from_encoding=response.info().get_param('charset'))
-#         image_url = soup.find("meta", property="og:image")["content"]
-#         image = image_url
-
-#         sid = SentimentIntensityAnalyzer()
-#         ss_title = sid.polarity_scores(title)
-#         ss_summary = sid.polarity_scores(summary)
-#         vader_title = ss_title
-#         vader_summary = ss_summary
-
-#         dbBasicVader.insert({
-#             "title": title,
-#             "summary": summary,
-#             "id": id,
-#             "imageUrl": image,
-#             "published": published_parsed,
-#             "source": "bbc",
-#             "region": "england",
-#             "vaderTitle": vader_title,
-#             "vaderSummary": vader_summary
-#         })
-
-#     return {"message": "successful"}
 
 
 @app.get("/api/v1/vader/score/{text}", tags=["Vader"])
