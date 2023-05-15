@@ -6,7 +6,7 @@
 
 import sentry_sdk
 import os
-from typing import List, Union
+from typing import List, Union, Dict
 from fastapi import FastAPI, status, Request
 from pydantic import BaseModel, HttpUrl
 from deta import Deta
@@ -45,8 +45,8 @@ class NewsResponse(BaseModel):
     vaderTitle: Vader
     vaderSummary: Vader
     id: str
-    imageUrl: HttpUrl = None
-    published: List[int] = None
+    imageUrl: str
+    published: List[int] 
 
 
 class Url(BaseModel):
@@ -92,7 +92,7 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/api/v1/vader/live/england", tags=["Vader"])
+@app.get("/api/v1/vader/live/england", tags=["Vader"], response_model=List[NewsResponse])
 def vader_scores_appended_to_BBC_England_news_feed():
     """ Returns a dictionary of BBC News England articles with 
     VADER scores for the title and summary."""
