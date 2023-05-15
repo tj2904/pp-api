@@ -44,8 +44,8 @@ class NewsResponse(BaseModel):
     summary: str
     vaderTitle: Vader
     vaderSummary: Vader
-    id: str
-    imageUrl: str
+    id: HttpUrl
+    imageUrl: HttpUrl
     published: List[int] 
 
 
@@ -129,7 +129,7 @@ def vader_scores_appended_to_BBC_England_news_feed():
     return df.to_dict(orient="records")
 
 
-@app.get("/api/v1/vader/live/tech", tags=["Vader"])
+@app.get("/api/v1/vader/live/tech", tags=["Vader"], response_model=List[NewsResponse])
 def vader_scores_appended_to_BBC_tech_news_feed():
     """ Returns a dictionary of BBC News Technology articles with 
     VADER scores for the title and summary."""
@@ -166,7 +166,7 @@ def vader_scores_appended_to_BBC_tech_news_feed():
     return df.to_dict(orient="records")
 
 
-@app.get("/api/v1/vader/live/{category}", tags=["Vader"])
+@app.get("/api/v1/vader/live/{category}", tags=["Vader"], response_model=List[NewsResponse])
 def vader_scores_appended_to_given_BBC_news_feed(category: str):
     """ Returns a dictionary of BBC News articles with 
     VADER scores for the title and summary for supplied category."""
@@ -207,7 +207,7 @@ def vader_scores_appended_to_given_BBC_news_feed(category: str):
 # {"vaderSummary.compound?gt": 0.75}
 
 
-@app.get("/api/v1/vader/summary/pos/top", tags=["Vader"])
+@app.get("/api/v1/vader/summary/pos/top", tags=["Vader"], response_model=List[NewsResponse])
 async def get_most_positive_vader_scored_news_from_database():
     """Returns the most positive news stories from BBC England News by summary compound"""
     result = dbBasicVader.fetch({"vaderSummary.compound?gt": 0.75})
@@ -271,7 +271,7 @@ async def vader_score_supplied_text(text: str):
     return {"data": scored_text} if scored_text else ({"error": "Bad request"}, 400)
 
 
-@app.get("/api/v1/vader/all", tags=["Vader"])
+@app.get("/api/v1/vader/all", tags=["Vader"], response_model=List[NewsResponse])
 async def get_all_vader_scored_news_from_database():
     """Returns all news stories from the database with Vader scores"""
     res = dbBasicVader.fetch([{"vaderSummary.compound?gte": 0.5}, {
