@@ -31,6 +31,7 @@ sentry_sdk.init(
     traces_sample_rate=1.0
 )
 
+
 class Vader(BaseModel):
     neg: float
     neu: float
@@ -79,8 +80,10 @@ app = FastAPI(title="PositivePress",
 deta = Deta(detaBaseApiKey)
 dbBasicVader = deta.Base("basicVaderScoredNews")
 
+
 @app.get('/api/healthcheck', response_model=HealthCheck, status_code=status.HTTP_200_OK)
 def perform_healthcheck():
+    """Simple healthcheck endpoint."""
     return {'healthcheck': 'Everything OK!'}
 
 
@@ -91,7 +94,8 @@ def read_root():
 
 @app.get("/api/v1/vader/live/england", tags=["Vader"])
 def vader_scores_appended_to_BBC_England_news_feed():
-
+    """ Returns a dictionary of BBC News England articles with 
+    VADER scores for the title and summary."""
     bbc_feed_new = feedparser.parse(
         "http://feeds.bbci.co.uk/news/england/rss.xml")
     items = bbc_feed_new.entries
@@ -127,7 +131,8 @@ def vader_scores_appended_to_BBC_England_news_feed():
 
 @app.get("/api/v1/vader/live/tech", tags=["Vader"])
 def vader_scores_appended_to_BBC_tech_news_feed():
-
+    """ Returns a dictionary of BBC News Technology articles with 
+    VADER scores for the title and summary."""
     bbc_feed_new = feedparser.parse(
         "http://feeds.bbci.co.uk/news/technology/rss.xml")
     items = bbc_feed_new.entries
@@ -163,7 +168,8 @@ def vader_scores_appended_to_BBC_tech_news_feed():
 
 @app.get("/api/v1/vader/live/{category}", tags=["Vader"])
 def vader_scores_appended_to_given_BBC_news_feed(category: str):
-
+    """ Returns a dictionary of BBC News articles with 
+    VADER scores for the title and summary for supplied category."""
     category = category.lower()
     bbc_feed_new = feedparser.parse(
         'http://feeds.bbci.co.uk/news/'+category+'/rss.xml')
@@ -199,14 +205,17 @@ def vader_scores_appended_to_given_BBC_news_feed(category: str):
 
 # get the highest scoring news story by summary compound
 # {"vaderSummary.compound?gt": 0.75}
+
+
 @app.get("/api/v1/vader/summary/pos/top", tags=["Vader"])
 async def get_most_positive_vader_scored_news_from_database():
+    """Returns the most positive news stories from BBC England News by summary compound"""
     result = dbBasicVader.fetch({"vaderSummary.compound?gt": 0.75})
     return {"data": result} if result else ({"message": "No news found"})
 
-# scrape OpenGraph tags to provide an image for a given news url
 @app.post("/api/v1/og/", response_model=UrlResponse, tags=["Utilities"])
 def get_open_graph_image(url):
+    """Uses OpenGraph tags to provide an image url for a given news url"""
     response = urllib.request.urlopen(url)
     soup = BeautifulSoup(response, 'html.parser',
                          from_encoding=response.info().get_param('charset'))
@@ -216,6 +225,7 @@ def get_open_graph_image(url):
 
 @app.get("/api/v1/vader/store/england", tags=["Vader"])
 def vader_bbc_england_news_to_database():
+    """ Triggers a write of BBC England News articles with Vader scores to the database"""
     bbc_feed_new = feedparser.parse(
         "http://feeds.bbci.co.uk/news/england/rss.xml")
     items = bbc_feed_new.entries
@@ -294,6 +304,7 @@ def vader_bbc_england_news_to_database():
 
 @app.get("/api/v1/vader/score/{text}", tags=["Vader"])
 async def vader_score_supplied_text(text: str):
+    """Returns a Vader score for a supplied text string"""
     sid = SentimentIntensityAnalyzer()
     scored_text = sid.polarity_scores(text)
     return {"data": scored_text} if scored_text else ({"error": "Bad request"}, 400)
@@ -301,6 +312,7 @@ async def vader_score_supplied_text(text: str):
 
 @app.get("/api/v1/vader/all", tags=["Vader"])
 async def get_all_vader_scored_news_from_database():
+    """Returns all news stories from the database with Vader scores"""
     res = dbBasicVader.fetch([{"vaderSummary.compound?gte": 0.5}, {
         "vaderTitle.compound?gte": 0.5}])
     return {"data": res} if res else ({"message": "No news found"})
