@@ -228,7 +228,7 @@ def vader_scores_appended_to_given_BBC_news_feed(category: str):
 # {"vaderSummary.compound?gt": 0.75}
 
 
-@app.get("/api/v1/vader/summary/pos/top", tags=["Vader"], response_model={NewsResponseDb})
+@app.get("/api/v1/vader/summary/pos/top", tags=["Vader"], response_model=NewsResponseDb)
 async def get_most_positive_vader_scored_news_from_database() -> Any:
     """Returns the most positive news stories from BBC England News by summary compound"""
     result = dbBasicVader.fetch({"vaderSummary.compound?gt": 0.75})
