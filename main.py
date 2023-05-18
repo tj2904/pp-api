@@ -5,7 +5,7 @@
 # uvicorn main:app --reload
 
 import os
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Any
 from fastapi import FastAPI, status, Request
 from pydantic import BaseModel, HttpUrl
 from deta import Deta
@@ -229,7 +229,7 @@ def vader_scores_appended_to_given_BBC_news_feed(category: str):
 
 
 @app.get("/api/v1/vader/summary/pos/top", tags=["Vader"], response_model={NewsResponseDb})
-async def get_most_positive_vader_scored_news_from_database():
+async def get_most_positive_vader_scored_news_from_database() -> Any:
     """Returns the most positive news stories from BBC England News by summary compound"""
     result = dbBasicVader.fetch({"vaderSummary.compound?gt": 0.75})
     return {"data": result} if result else ({"message": "No news found"})
