@@ -4,7 +4,6 @@
 # to run the server, run the following command in the terminal
 # uvicorn main:app --reload
 
-import sentry_sdk
 import os
 from typing import List, Union, Dict
 from fastapi import FastAPI, status, Request
@@ -17,8 +16,12 @@ import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk.sentiment.vader
 
+from dotenv import load_dotenv
 import urllib.request
 from urllib.parse import urlparse
+import sentry_sdk
+
+load_dotenv()
 
 detaBaseApiKey = os.getenv("Deta-Base")
 
@@ -46,7 +49,16 @@ class NewsResponse(BaseModel):
     vaderSummary: Vader
     id: HttpUrl
     imageUrl: HttpUrl
-    published: List[int] 
+    published: List[int]
+
+class NewsResponse2(BaseModel):
+    title: str
+    summary: str
+    vaderTitle: Vader
+    vaderSummary: Vader
+    id: HttpUrl
+    imageUrl: HttpUrl
+    published: str
 
 
 class Url(BaseModel):
@@ -207,7 +219,7 @@ def vader_scores_appended_to_given_BBC_news_feed(category: str):
 # {"vaderSummary.compound?gt": 0.75}
 
 
-@app.get("/api/v1/vader/summary/pos/top", tags=["Vader"], response_model=List[NewsResponse])
+@app.get("/api/v1/vader/summary/pos/top", tags=["Vader"], response_model=List[NewsResponse2])
 async def get_most_positive_vader_scored_news_from_database():
     """Returns the most positive news stories from BBC England News by summary compound"""
     result = dbBasicVader.fetch({"vaderSummary.compound?gt": 0.75})
@@ -272,7 +284,7 @@ async def vader_score_supplied_text(text: str):
     return {"data": scored_text} if scored_text else ({"error": "Bad request"}, 400)
 
 
-@app.get("/api/v1/vader/all", tags=["Vader"], response_model=List[NewsResponse])
+@app.get("/api/v1/vader/all", tags=["Vader"], response_model=List[NewsResponse2])
 async def get_all_vader_scored_news_from_database():
     """Returns all news stories from the database with Vader scores"""
     res = dbBasicVader.fetch([{"vaderSummary.compound?gte": 0.5}, {
