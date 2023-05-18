@@ -41,6 +41,12 @@ class Vader(BaseModel):
     pos: float
     compound: float
 
+class VaderDb(BaseModel):
+    compound: float
+    neg: float
+    neu: float
+    pos: float
+
 
 class NewsResponse(BaseModel):
     title: str
@@ -51,14 +57,17 @@ class NewsResponse(BaseModel):
     imageUrl: HttpUrl
     published: List[int]
 
-class NewsResponse2(BaseModel):
-    title: str
-    summary: str
-    vaderTitle: Vader
-    vaderSummary: Vader
+class NewsResponseDb(BaseModel):
     id: HttpUrl
     imageUrl: HttpUrl
+    key: str
     published: str
+    region: str
+    source: str
+    summary: str
+    title: str
+    vaderSummary: VaderDb
+    vaderTitle: VaderDb
 
 
 class Url(BaseModel):
@@ -219,7 +228,7 @@ def vader_scores_appended_to_given_BBC_news_feed(category: str):
 # {"vaderSummary.compound?gt": 0.75}
 
 
-@app.get("/api/v1/vader/summary/pos/top", tags=["Vader"], response_model=List[NewsResponse2])
+@app.get("/api/v1/vader/summary/pos/top", tags=["Vader"], response_model=List[NewsResponseDb])
 async def get_most_positive_vader_scored_news_from_database():
     """Returns the most positive news stories from BBC England News by summary compound"""
     result = dbBasicVader.fetch({"vaderSummary.compound?gt": 0.75})
@@ -284,7 +293,7 @@ async def vader_score_supplied_text(text: str):
     return {"data": scored_text} if scored_text else ({"error": "Bad request"}, 400)
 
 
-@app.get("/api/v1/vader/all", tags=["Vader"], response_model=List[NewsResponse2])
+@app.get("/api/v1/vader/all", tags=["Vader"], response_model=List[NewsResponseDb])
 async def get_all_vader_scored_news_from_database():
     """Returns all news stories from the database with Vader scores"""
     res = dbBasicVader.fetch([{"vaderSummary.compound?gte": 0.5}, {
