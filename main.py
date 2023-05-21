@@ -23,7 +23,7 @@ from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 load_dotenv()
-detaBaseApiKey = os.getenv("Deta-Base")
+detaBaseApiKey = os.getenv("DetaBase")
 
 sentry_sdk.init(
     dsn="https://5a0e51d4d9df41cf963941e56b6f71d6@o4505121660665856.ingest.sentry.io/4505127392837632",
@@ -307,3 +307,6 @@ async def get_all_vader_scored_news_from_database():
     res = dbBasicVader.fetch([{"vaderSummary.compound?gte": 0.5}, {
         "vaderTitle.compound?gte": 0.5}])
     return {"data": res} if res else ({"message": "No news found"})
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
