@@ -16,10 +16,13 @@ from bs4 import BeautifulSoup
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk.sentiment.vader
+nltk.download('vader_lexicon')
 
 import urllib.request
 from urllib.parse import urlparse
 
+from dotenv import load_dotenv
+load_dotenv()
 detaBaseApiKey = os.getenv("Deta-Base")
 
 sentry_sdk.init(
