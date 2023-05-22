@@ -307,3 +307,6 @@ async def get_all_vader_scored_news_from_database():
     res = dbBasicVader.fetch([{"vaderSummary.compound?gte": 0.5}, {
         "vaderTitle.compound?gte": 0.5}])
     return {"data": res} if res else ({"message": "No news found"})
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
