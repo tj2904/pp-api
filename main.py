@@ -41,12 +41,6 @@ class Vader(BaseModel):
     pos: float
     compound: float
 
-class VaderDb(BaseModel):
-    compound: float
-    neg: float
-    neu: float
-    pos: float
-
 
 class NewsResponse(BaseModel):
     title: str
@@ -56,18 +50,6 @@ class NewsResponse(BaseModel):
     id: HttpUrl
     imageUrl: HttpUrl
     published: List[int]
-
-class NewsResponseDb(BaseModel):
-    id: HttpUrl
-    imageUrl: HttpUrl
-    key: str
-    published: str
-    region: str
-    source: str
-    summary: str
-    title: str
-    vaderSummary: VaderDb
-    vaderTitle: VaderDb
 
 
 class Url(BaseModel):
@@ -96,7 +78,7 @@ tags_metadata = [
     },
 ]
 app = FastAPI(title="PositivePress",
-              description="API service to support Positive Press, a service that sorts news to find the postive.", openapi_tags=tags_metadata, version="1.0.0")
+              description="API service to support Positive Press, a service that sorts news to find the postive.", openapi_tags=tags_metadata, version="1.0.1")
 
 deta = Deta(detaBaseApiKey)
 dbBasicVader = deta.Base("basicVaderScoredNews")
@@ -110,11 +92,12 @@ def perform_healthcheck():
 
 @app.get("/")
 def read_root():
+    """Returns a simple hello world message."""
     return {"Hello": "World"}
 
 
 @app.get("/api/v1/vader/live/england", tags=["Vader"], response_model=List[NewsResponse])
-def vader_scores_appended_to_BBC_England_news_feed():
+def vader_scores_appended_to_bbc_england_news_feed():
     """ Returns a dictionary of BBC News England articles with 
     VADER scores for the title and summary."""
     bbc_feed_new = feedparser.parse(
@@ -151,7 +134,7 @@ def vader_scores_appended_to_BBC_England_news_feed():
 
 
 @app.get("/api/v1/vader/live/tech", tags=["Vader"], response_model=List[NewsResponse])
-def vader_scores_appended_to_BBC_tech_news_feed():
+def vader_scores_appended_to_bbc_tech_news_feed():
     """ Returns a dictionary of BBC News Technology articles with 
     VADER scores for the title and summary."""
     bbc_feed_new = feedparser.parse(
@@ -188,7 +171,7 @@ def vader_scores_appended_to_BBC_tech_news_feed():
 
 
 @app.get("/api/v1/vader/live/{category}", tags=["Vader"], response_model=List[NewsResponse])
-def vader_scores_appended_to_given_BBC_news_feed(category: str):
+def vader_scores_appended_to_given_bbc_news_feed(category: str):
     """ Returns a dictionary of BBC News articles with 
     VADER scores for the title and summary for supplied category."""
     category = category.lower()
@@ -228,7 +211,7 @@ def vader_scores_appended_to_given_BBC_news_feed(category: str):
 # {"vaderSummary.compound?gt": 0.75}
 
 
-@app.get("/api/v1/vader/summary/pos/top", tags=["Vader"], response_model=NewsResponseDb)
+@app.get("/api/v1/vader/summary/pos/top", tags=["Vader"])
 async def get_most_positive_vader_scored_news_from_database() -> Any:
     """Returns the most positive news stories from BBC England News by summary compound"""
     result = dbBasicVader.fetch({"vaderSummary.compound?gt": 0.75})
@@ -293,7 +276,7 @@ async def vader_score_supplied_text(text: str):
     return {"data": scored_text} if scored_text else ({"error": "Bad request"}, 400)
 
 
-@app.get("/api/v1/vader/all", tags=["Vader"], response_model=List[NewsResponseDb])
+@app.get("/api/v1/vader/all", tags=["Vader"])
 async def get_all_vader_scored_news_from_database():
     """Returns all news stories from the database with Vader scores"""
     res = dbBasicVader.fetch([{"vaderSummary.compound?gte": 0.5}, {
