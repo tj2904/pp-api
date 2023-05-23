@@ -22,8 +22,6 @@ import urllib.request
 from urllib.parse import urlparse
 import sentry_sdk
 
-load_dotenv()
-
 from dotenv import load_dotenv
 load_dotenv()
 detaBaseApiKey = os.getenv("DetaBase")
