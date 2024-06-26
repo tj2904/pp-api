@@ -34,7 +34,6 @@ orjson==3.10.5
 packaging==24.1
 pandas==2.0.3
 pathspec==0.12.1
-pkg_resources==0.0.0
 platformdirs==4.2.2
 pluggy==1.0.0
 pydantic==2.7.4
