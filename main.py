@@ -17,7 +17,6 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk.sentiment.vader
 nltk.download('vader_lexicon')
 
-from dotenv import load_dotenv
 import urllib.request
 from urllib.parse import urlparse
 import sentry_sdk
