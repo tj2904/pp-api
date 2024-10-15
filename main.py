@@ -288,7 +288,19 @@ async def vader_score_supplied_text(text: str):
 @app.get("/api/v1/vader/all", tags=["Vader"])
 async def get_all_vader_scored_news_from_database():
     """Returns all news stories from the database with Vader scores"""
-    res = db.collection('basicVaderScoredNews').where(
-        'vaderSummary.compound', '>=', 0.5).where('vaderTitle.compound', '>=', 0.5).stream()
-    data = [doc.to_dict() for doc in res]
-    return {"data": data} if data else ({"message": "No news found"})
+    try:
+        # Query Firestore for documents with the specified conditions
+        res = db.collection('basicVaderScoredNews').where(
+            'vaderSummary.compound', '>=', 0.5).where('vaderTitle.compound', '>=', 0.5).stream()
+
+        # Convert Firestore documents to a list of dictionaries
+        data = [doc.to_dict() for doc in res]
+
+        # Check if data is not empty and return it
+        if data:
+            return {"data": data}
+        else:
+            return {"message": "No news found"}
+    except Exception as e:
+        # Handle any exceptions that occur during the Firestore query
+        return {"error": str(e)}
