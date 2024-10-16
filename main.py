@@ -4,11 +4,17 @@
 # to run the server, run the following command in the terminal
 # uvicorn main:app --reload
 
+from dotenv import load_dotenv
+from firebase_admin import credentials, firestore
+import firebase_admin
+import sentry_sdk
+from urllib.parse import urlparse
+import urllib.request
 import os
+import json
 from typing import List, Union, Dict, Any
 from fastapi import FastAPI, status, Request
 from pydantic import BaseModel, HttpUrl
-from deta import Deta
 import feedparser
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -17,22 +23,29 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk.sentiment.vader
 nltk.download('vader_lexicon')
 
-import urllib.request
-from urllib.parse import urlparse
-import sentry_sdk
 
-from dotenv import load_dotenv
+# Load environment variables from .env file
 load_dotenv()
-detaBaseApiKey = os.getenv("DetaBase")
 
 sentry_sdk.init(
     dsn="https://5a0e51d4d9df41cf963941e56b6f71d6@o4505121660665856.ingest.sentry.io/4505127392837632",
-
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production.
     traces_sample_rate=1.0
 )
+
+# Initialize Firebase Admin SDK if not already initialized
+if not firebase_admin._apps:
+    # Read the service account key from the environment variable
+    service_account_key = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY")
+    if service_account_key:
+        cred = credentials.Certificate(json.loads(service_account_key))
+        firebase_admin.initialize_app(cred)
+    else:
+        raise ValueError(
+            "FIREBASE_SERVICE_ACCOUNT_KEY environment variable not set")
+
+
+# Initialize Firestore client
+db = firestore.client()
 
 
 class Vader(BaseModel):
@@ -47,7 +60,7 @@ class NewsResponse(BaseModel):
     summary: str
     vaderTitle: Vader
     vaderSummary: Vader
-    id: HttpUrl
+    itemUrl: HttpUrl
     imageUrl: HttpUrl
     published: List[int]
 
@@ -80,9 +93,6 @@ tags_metadata = [
 app = FastAPI(title="PositivePress",
               description="API service to support Positive Press, a service that sorts news to find the postive.", openapi_tags=tags_metadata, version="1.0.1")
 
-deta = Deta(detaBaseApiKey)
-dbBasicVader = deta.Base("basicVaderScoredNews")
-
 
 @app.get('/api/healthcheck', response_model=HealthCheck, status_code=status.HTTP_200_OK)
 def perform_healthcheck():
@@ -113,21 +123,21 @@ def vader_scores_appended_to_bbc_england_news_feed():
 
         sid = SentimentIntensityAnalyzer()
         ss_title = sid.polarity_scores(title)
-        ss_sumamry = sid.polarity_scores(summary)
+        ss_summary = sid.polarity_scores(summary)
         vader_title = ss_title
-        vader_summary = ss_sumamry
+        vader_summary = ss_summary
 
-        id = item.id
+        itemUrl = item.id
         published_parsed = item.published_parsed
 
-        response = urllib.request.urlopen(id)
+        response = urllib.request.urlopen(itemUrl)
         soup = BeautifulSoup(response, 'html.parser',
                              from_encoding=response.info().get_param('charset'))
         image_url = soup.find("meta", property="og:image")["content"]
         image = image_url
 
         row = {'title': title, 'summary': summary, 'vaderTitle': vader_title,
-               'vaderSummary': vader_summary, 'id': id, 'imageUrl': image, 'published': published_parsed}
+               'vaderSummary': vader_summary, 'itemUrl': itemUrl, 'imageUrl': image, 'published': published_parsed}
         df = df.append(row, ignore_index=True)
 
     return df.to_dict(orient="records")
@@ -150,21 +160,21 @@ def vader_scores_appended_to_bbc_tech_news_feed():
 
         sid = SentimentIntensityAnalyzer()
         ss_title = sid.polarity_scores(title)
-        ss_sumamry = sid.polarity_scores(summary)
+        ss_summary = sid.polarity_scores(summary)
         vader_title = ss_title
-        vader_summary = ss_sumamry
+        vader_summary = ss_summary
 
-        id = item.id
+        itemUrl = item.id
         published_parsed = item.published_parsed
 
-        response = urllib.request.urlopen(id)
+        response = urllib.request.urlopen(itemUrl)
         soup = BeautifulSoup(response, 'html.parser',
                              from_encoding=response.info().get_param('charset'))
         image_url = soup.find("meta", property="og:image")["content"]
         image = image_url
 
         row = {'title': title, 'summary': summary, 'vaderTitle': vader_title,
-               'vaderSummary': vader_summary, 'id': id, 'imageUrl': image, 'published': published_parsed}
+               'vaderSummary': vader_summary, 'itemUrl': itemUrl, 'imageUrl': image, 'published': published_parsed}
         df = df.append(row, ignore_index=True)
 
     return df.to_dict(orient="records")
@@ -188,34 +198,33 @@ def vader_scores_appended_to_given_bbc_news_feed(category: str):
 
         sid = SentimentIntensityAnalyzer()
         ss_title = sid.polarity_scores(title)
-        ss_sumamry = sid.polarity_scores(summary)
+        ss_summary = sid.polarity_scores(summary)
         vader_title = ss_title
-        vader_summary = ss_sumamry
+        vader_summary = ss_summary
 
-        id = item.id
+        itemUrl = item.id
         published_parsed = item.published_parsed
 
-        response = urllib.request.urlopen(id)
+        response = urllib.request.urlopen(itemUrl)
         soup = BeautifulSoup(response, 'html.parser',
                              from_encoding=response.info().get_param('charset'))
         image_url = soup.find("meta", property="og:image")["content"]
         image = image_url
 
         row = {'title': title, 'summary': summary, 'vaderTitle': vader_title,
-               'vaderSummary': vader_summary, 'id': id, 'imageUrl': image, 'published': published_parsed}
+               'vaderSummary': vader_summary, 'itemUrl': itemUrl, 'imageUrl': image, 'published': published_parsed}
         df = df.append(row, ignore_index=True)
 
     return df.to_dict(orient="records")
-
-# get the highest scoring news story by summary compound
-# {"vaderSummary.compound?gt": 0.75}
 
 
 @app.get("/api/v1/vader/summary/pos/top", tags=["Vader"])
 async def get_most_positive_vader_scored_news_from_database() -> Any:
     """Returns the most positive news stories from BBC England News by summary compound"""
-    result = dbBasicVader.fetch({"vaderSummary.compound?gt": 0.75})
-    return {"data": result} if result else ({"message": "No news found"})
+    result = db.collection('basicVaderScoredNews').where(
+        'vaderSummary.compound', '>', 0.75).stream()
+    data = [doc.to_dict() for doc in result]
+    return {"data": data} if data else ({"message": "No news found"})
 
 
 @app.post("/api/v1/og/", tags=["Utilities"], response_model=UrlResponse)
@@ -238,10 +247,10 @@ def vader_bbc_england_news_to_database():
     for item in items:
         title = item.title
         summary = item.summary
-        id = item.id
+        itemUrl = item.id
         published_parsed = item.published
 
-        response = urllib.request.urlopen(id)
+        response = urllib.request.urlopen(itemUrl)
         soup = BeautifulSoup(response, 'html.parser',
                              from_encoding=response.info().get_param('charset'))
         image_url = soup.find("meta", property="og:image")["content"]
@@ -253,10 +262,10 @@ def vader_bbc_england_news_to_database():
         vader_title = ss_title
         vader_summary = ss_summary
 
-        dbBasicVader.insert({
+        db.collection('basicVaderScoredNews').add({
             "title": title,
             "summary": summary,
-            "id": id,
+            "itemUrl": itemUrl,
             "imageUrl": image,
             "published": published_parsed,
             "source": "bbc",
@@ -279,6 +288,19 @@ async def vader_score_supplied_text(text: str):
 @app.get("/api/v1/vader/all", tags=["Vader"])
 async def get_all_vader_scored_news_from_database():
     """Returns all news stories from the database with Vader scores"""
-    res = dbBasicVader.fetch([{"vaderSummary.compound?gte": 0.5}, {
-        "vaderTitle.compound?gte": 0.5}])
-    return {"data": res} if res else ({"message": "No news found"})
+    try:
+        # Query Firestore for documents with the specified conditions
+        res = db.collection('basicVaderScoredNews').where(
+            'vaderSummary.compound', '>=', 0.5).where('vaderTitle.compound', '>=', 0.5).stream()
+
+        # Convert Firestore documents to a list of dictionaries
+        data = [doc.to_dict() for doc in res]
+
+        # Check if data is not empty and return it
+        if data:
+            return {"data": data}
+        else:
+            return {"message": "No news found"}
+    except Exception as e:
+        # Handle any exceptions that occur during the Firestore query
+        return {"error": str(e)}
