@@ -1,7 +1,8 @@
 from fastapi.testclient import TestClient
-from main import app
+# from main import app
 
 client = TestClient(app)
+
 
 def test_vader_scores_appended_to_given_bbc_news_feed():
     """Test the all purpose bbc news endpoint"""
