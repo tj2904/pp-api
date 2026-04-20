@@ -1,0 +1,15 @@
+-r requirements.txt
+
+# Developer tooling (not required for production runtime)
+astroid==2.14.1
+black==24.4.2
+dill==0.3.6
+isort==5.12.0
+lazy-object-proxy==1.9.0
+mccabe==0.7.0
+mypy-extensions==0.4.3
+pathspec==0.11.0
+platformdirs==2.6.2
+pylint==2.16.0
+tomlkit==0.11.6
+wrapt==1.14.1
