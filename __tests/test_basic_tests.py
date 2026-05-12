@@ -35,7 +35,7 @@ def test_get_open_graph_image():
     assert response.json() == {"image": "https://example.com/image.jpg"}
 
 def test_get_top_vader_from_db():
-    """Test the endpoint that retrives top stored news articles"""
+    """Test the endpoint that retrieves top stored news articles"""
     response = client.get("/api/v1/vader/summary/pos/top")
     if response.status_code == 503:
         assert response.json() == {"detail": "Database unavailable"}
