@@ -13,7 +13,7 @@ import urllib.request
 import os
 import json
 from typing import List, Union, Dict, Any
-from fastapi import FastAPI, status, Request
+from fastapi import FastAPI, status, HTTPException
 from pydantic import BaseModel, HttpUrl
 import feedparser
 import pandas as pd
@@ -219,7 +219,10 @@ def vader_scores_appended_to_given_bbc_news_feed(category: str):
 async def get_most_positive_vader_scored_news_from_database() -> Any:
     """Returns the most positive news stories from BBC England News by summary compound"""
     if db is None:
-        return {"message": "Database unavailable"}
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database unavailable",
+        )
     result = db.collection('basicVaderScoredNews').where(
         'vaderSummary.compound', '>', 0.75).stream()
     data = [doc.to_dict() for doc in result]
@@ -240,7 +243,10 @@ def get_open_graph_image(url):
 def vader_bbc_england_news_to_database():
     """ Triggers a write of BBC England News articles with Vader scores to the database"""
     if db is None:
-        return {"message": "Database unavailable"}
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database unavailable",
+        )
     bbc_feed_new = feedparser.parse(
         "http://feeds.bbci.co.uk/news/england/rss.xml")
     items = bbc_feed_new.entries
@@ -290,7 +296,10 @@ async def vader_score_supplied_text(text: str):
 async def get_all_vader_scored_news_from_database():
     """Returns all news stories from the database with Vader scores"""
     if db is None:
-        return {"message": "Database unavailable"}
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database unavailable",
+        )
     try:
         # Query Firestore for documents with the specified conditions
         res = db.collection('basicVaderScoredNews').where(
