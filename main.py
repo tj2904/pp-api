@@ -39,13 +39,10 @@ if not firebase_admin._apps:
     if service_account_key:
         cred = credentials.Certificate(json.loads(service_account_key))
         firebase_admin.initialize_app(cred)
-    else:
-        raise ValueError(
-            "FIREBASE_SERVICE_ACCOUNT_KEY environment variable not set")
 
 
 # Initialize Firestore client
-db = firestore.client()
+db = firestore.client() if firebase_admin._apps else None
 
 
 class Vader(BaseModel):
@@ -221,6 +218,8 @@ def vader_scores_appended_to_given_bbc_news_feed(category: str):
 @app.get("/api/v1/vader/summary/pos/top", tags=["Vader"])
 async def get_most_positive_vader_scored_news_from_database() -> Any:
     """Returns the most positive news stories from BBC England News by summary compound"""
+    if db is None:
+        return {"message": "Database unavailable"}
     result = db.collection('basicVaderScoredNews').where(
         'vaderSummary.compound', '>', 0.75).stream()
     data = [doc.to_dict() for doc in result]
@@ -240,6 +239,8 @@ def get_open_graph_image(url):
 @app.get("/api/v1/vader/store/england", tags=["Vader"])
 def vader_bbc_england_news_to_database():
     """ Triggers a write of BBC England News articles with Vader scores to the database"""
+    if db is None:
+        return {"message": "Database unavailable"}
     bbc_feed_new = feedparser.parse(
         "http://feeds.bbci.co.uk/news/england/rss.xml")
     items = bbc_feed_new.entries
@@ -288,6 +289,8 @@ async def vader_score_supplied_text(text: str):
 @app.get("/api/v1/vader/all", tags=["Vader"])
 async def get_all_vader_scored_news_from_database():
     """Returns all news stories from the database with Vader scores"""
+    if db is None:
+        return {"message": "Database unavailable"}
     try:
         # Query Firestore for documents with the specified conditions
         res = db.collection('basicVaderScoredNews').where(
