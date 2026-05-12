@@ -37,7 +37,10 @@ def test_get_open_graph_image():
 def test_get_top_vader_from_db():
     """Test the endpoint that retrives top stored news articles"""
     response = client.get("/api/v1/vader/summary/pos/top")
-    assert response.status_code in [200, 503]
+    if response.status_code == 503:
+        assert response.json() == {"detail": "Database unavailable"}
+    else:
+        assert response.status_code == 200
 
 def test_get_vader_scored_bbc_news_feed():
     """Test the al purpose bbc news endpoint"""
